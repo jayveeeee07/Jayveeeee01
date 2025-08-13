@@ -5,28 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jayvee Hall of Mansion</title>
   <link rel="stylesheet" href="style.css">
-  <script defer src="script.js"></script>
   <style>
-    /* Reset & Fullscreen Background */
-    * {
-      box-sizing: border-box;
+    /* Fullscreen Background */
+    body {
       margin: 0;
       padding: 0;
-    }
-
-    body {
       height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: Arial, sans-serif;
+      background: url('assets/bgindex.jpg') no-repeat center center/cover;
+      font-family: 'Arial', sans-serif;
       color: #fff;
       position: relative;
       overflow: hidden;
-      background: url('assets/bgindex.jpg') center/cover no-repeat;
     }
-
-    /* Dark Overlay */
     body::before {
       content: "";
       position: fixed;
@@ -34,85 +27,32 @@
       background: rgba(0,0,0,0.5);
       z-index: 0;
     }
-
-    /* Welcome Container */
     .welcome-container {
       position: relative;
       z-index: 1;
       max-width: 700px;
       width: 90%;
-      padding: 2rem;
+      padding: 30px;
       border-radius: 15px;
       text-align: center;
       background: rgba(255,255,255,0.1);
       backdrop-filter: blur(8px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
       animation: fadeIn 1.5s ease-in-out;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
-
-    .welcome-container h1 {
-      font-size: 2.2rem;
-      margin-bottom: 1rem;
-      color: #fff;
-    }
-
-    .welcome-container p {
-      font-size: 1rem;
-      line-height: 1.5;
-      color: #f1f1f1;
-      margin-bottom: 1.5rem;
-    }
-
-    label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0.5rem 0 1.5rem;
-      font-size: 0.95rem;
-      cursor: pointer;
-    }
-
-    input[type="checkbox"] {
-      transform: scale(1.3);
-      margin-right: 0.5rem;
-      cursor: pointer;
-    }
-
-    button {
-      padding: 0.75rem 2rem;
-      font-size: 1rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      background: #007bff;
-      color: #fff;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:disabled {
-      background: #666;
-      cursor: not-allowed;
-    }
-
-    button:hover:enabled {
-      background: #0056b3;
-      transform: scale(1.05);
-    }
-
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(20px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-
-    @media (max-width: 600px) {
-      .welcome-container h1 { font-size: 1.8rem; }
-      .welcome-container p { font-size: 0.9rem; }
-    }
+    .welcome-container h1 { font-size: 2.2rem; margin-bottom: 15px; color: #fff; }
+    .welcome-container p { font-size: 1rem; line-height: 1.5; color: #f1f1f1; margin-bottom: 20px; }
+    .welcome-container label { display: flex; align-items: center; justify-content: center; margin: 10px 0; font-size: 0.95rem; cursor: pointer; }
+    .welcome-container input[type="checkbox"] { transform: scale(1.3); margin-right: 8px; cursor: pointer; }
+    .welcome-container button { padding: 12px 30px; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px; background: #007bff; color: #fff; cursor: pointer; transition: 0.3s; }
+    .welcome-container button:disabled { background: #666; cursor: not-allowed; }
+    .welcome-container button:hover:enabled { background: #0056b3; transform: scale(1.05); }
+    @keyframes fadeIn { from {opacity: 0; transform: translateY(20px);} to {opacity: 1; transform: translateY(0);} }
+    @media (max-width: 600px) { .welcome-container h1 { font-size: 1.8rem; } .welcome-container p { font-size: 0.9rem; } }
   </style>
 </head>
 <body>
-  <div class="welcome-container">
+  <div class="welcome-container fade-in">
     <h1>Welcome to Jayvee Hall of Mansion</h1>
     <p>
       Experience luxury and comfort at Jayvee Hall of Mansion, nestled in the heart of Malungon, Sarangani. 
@@ -125,12 +65,60 @@
     <button id="getStarted" disabled>Get Started</button>
   </div>
 
-  <script>
+  <!-- Firebase + Firestore Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCo0KmcDayOu8FI1FaVGiiIPs7CcR8CDvg",
+      authDomain: "jayeehallhotel.firebaseapp.com",
+      projectId: "jayeehallhotel",
+      storageBucket: "jayeehallhotel.appspot.com",
+      messagingSenderId: "496972419156",
+      appId: "1:496972419156:web:83bc4cd30c403663119dc1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     const terms = document.getElementById('terms');
     const btn = document.getElementById('getStarted');
 
-    terms.addEventListener('change', () => btn.disabled = !terms.checked);
-    btn.addEventListener('click', () => window.location.href = 'login.html');
+    const usersCollection = collection(db, "users");
+    const userEmail = "example@example.com"; // Replace with real user ID or email
+
+    // Check if the user has already agreed
+    async function checkAgreement(email) {
+      const q = query(usersCollection, where("email", "==", email));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        terms.checked = true;
+        btn.disabled = false;
+      }
+    }
+
+    checkAgreement(userEmail);
+
+    terms.addEventListener('change', () => {
+      btn.disabled = !terms.checked;
+    });
+
+    btn.addEventListener('click', async () => {
+      if (terms.checked) {
+        try {
+          await addDoc(usersCollection, {
+            email: userEmail,
+            agreedToTerms: true,
+            timestamp: new Date()
+          });
+          window.location.href = 'login.html';
+        } catch (e) {
+          console.error("Error saving agreement:", e);
+        }
+      }
+    });
   </script>
 </body>
-</html>
+  </html>
