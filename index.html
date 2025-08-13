@@ -67,64 +67,49 @@
 
   <!-- Firebase + Firestore Script -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCo0KmcDayOu8FI1FaVGiiIPs7CcR8CDvg",
-      authDomain: "jayeehallhotel.firebaseapp.com",
-      projectId: "jayeehallhotel",
-      storageBucket: "jayeehallhotel.appspot.com",
-      messagingSenderId: "496972419156",
-      appId: "1:496972419156:web:83bc4cd30c403663119dc1"
-    };
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCo0KmcDayOu8FI1FaVGiiIPs7CcR8CDvg",
+  authDomain: "jayeehallhotel.firebaseapp.com",
+  projectId: "jayeehallhotel",
+  storageBucket: "jayeehallhotel.appspot.com",
+  messagingSenderId: "496972419156",
+  appId: "1:496972419156:web:83bc4cd30c403663119dc1"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    const terms = document.getElementById('terms');
-    const btn = document.getElementById('getStarted');
+const terms = document.getElementById('terms');
+const btn = document.getElementById('getStarted');
+const usersCollection = collection(db, "users");
+const userEmail = "example@example.com"; // Replace with actual user email
 
-    const usersCollection = collection(db, "users");
-    const userEmail = "example@example.com"; // Replace with real user ID or email
+// Enable button if checkbox is checked
+terms.addEventListener('change', () => {
+  btn.disabled = !terms.checked;
+});
 
-    // Check if the user has already agreed
-    async function checkAgreement(email) {
-      const q = query(usersCollection, where("email", "==", email));
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        terms.checked = true;
-        btn.disabled = false;
-      }
-    }
+// When button is clicked
+btn.addEventListener('click', async () => {
+  if (!terms.checked) return;
 
-    checkAgreement(userEmail);
-
-    terms.addEventListener('change', () => {
-      btn.disabled = !terms.checked;
+  try {
+    // Save agreement in Firestore
+    await addDoc(usersCollection, {
+      email: userEmail,
+      agreedToTerms: true,
+      timestamp: new Date()
     });
 
-    btn.addEventListener('click', async () => {
-      if (terms.checked) {
-        try {
-          await addDoc(usersCollection, {
-            email: userEmail,
-            agreedToTerms: true,
-            timestamp: new Date()
-          });
-          window.location.href = 'login.html';
-        } catch (e) {
-          console.error("Error saving agreement:", e);
-        }
-      }
-    });
-    <script>
-    const terms = document.getElementById('terms');
-    const btn = document.getElementById('getStarted');
-    terms.addEventListener('change', () => btn.disabled = !terms.checked);
-    btn.addEventListener('click', () => window.location.href = 'login.html');
+    // Redirect to login page
+    window.location.href = 'login.html';
+  } catch (err) {
+    console.error("Error saving agreement:", err);
+    alert("Something went wrong. Please try again.");
+  }
+});
   </script>
-  </script>
-</body>
-  </html>
