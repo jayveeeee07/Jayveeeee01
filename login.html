@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Jayvee Hall of Mansion</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Arial', sans-serif;
+      background: url('assets/bgindex.jpg') no-repeat center center/cover;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 0;
+    }
+    .login-container {
+      position: relative;
+      z-index: 1;
+      width: 90%;
+      max-width: 400px;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      text-align: center;
+      color: #fff;
+      animation: fadeIn 1s ease-in-out;
+    }
+    .login-container h2 { margin-bottom: 20px; }
+    .login-container input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+    .login-container input::placeholder { color: rgba(255,255,255,0.7); }
+    .login-container button {
+      width: 95%;
+      padding: 12px;
+      margin-top: 15px;
+      background: #00c3ff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .login-container button:hover { background: #009bd1; }
+    .forgot-btn {
+      width: 95%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #ff6b6b;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .forgot-btn:hover { background: #e25555; }
+    .login-container p { margin-top: 15px; font-size: 0.9rem; }
+    .login-container a { color: #00c3ff; text-decoration: none; }
+    .login-container a:hover { text-decoration: underline; }
+    #error { color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; }
+    @keyframes fadeIn { from {opacity: 0; transform: translateY(30px);} to {opacity: 1; transform: translateY(0);} }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button id="loginBtn">Login</button>
+    <button class="forgot-btn" id="forgotBtn">Forgot Password?</button>
+    <p>Don't have an account? <a href="register.html">Register</a></p>
+    <p id="error"></p>
+  </div>
+
+  <!-- Firebase Scripts -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCo0KmcDayOu8FI1FaVGiiIPs7CcR8CDvg",
+      authDomain: "jayeehallhotel.firebaseapp.com",
+      projectId: "jayeehallhotel",
+      storageBucket: "jayeehallhotel.appspot.com",
+      messagingSenderId: "496972419156",
+      appId: "1:496972419156:web:83bc4cd30c403663119dc1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const loginBtn = document.getElementById("loginBtn");
+    const forgotBtn = document.getElementById("forgotBtn");
+    const errorMsg = document.getElementById("error");
+
+    loginBtn.addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!email || !password) {
+        errorMsg.textContent = "Please fill in all fields.";
+        return;
+      }
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Check user role in Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const role = userDoc.exists() ? userDoc.data().role : "User";
+
+        if (role === "Admin") {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "home.html";
+        }
+      } catch (error) {
+        errorMsg.textContent = "Invalid email or password.";
+        console.error(error);
+      }
+    });
+
+    forgotBtn.addEventListener("click", async () => {
+      const email = prompt("Enter your registered email to reset your password:");
+      if (!email) return;
+      try {
+        await sendPasswordResetEmail(auth, email.trim());
+        alert("Password reset email sent!");
+      } catch (err) {
+        alert("No account found with that email.");
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
