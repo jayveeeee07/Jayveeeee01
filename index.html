@@ -119,6 +119,12 @@
         }
       }
     });
+    <script>
+    const terms = document.getElementById('terms');
+    const btn = document.getElementById('getStarted');
+    terms.addEventListener('change', () => btn.disabled = !terms.checked);
+    btn.addEventListener('click', () => window.location.href = 'login.html');
+  </script>
   </script>
 </body>
   </html>
